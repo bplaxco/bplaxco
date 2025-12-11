@@ -25,5 +25,5 @@ I prefer [async communication](https://handbook.gitlab.com/handbook/company/cult
 Still tweaking but generally:
 
 - Meetings and async comms respones in the morning
-- Heads down 2-3 hours in the afternoon for project work
+- Heads down ~3 hours in the afternoon for focused project work
 
