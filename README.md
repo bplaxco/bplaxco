@@ -4,7 +4,7 @@ This README provides an overview of my prefered work style, communication method
 
 ## Prefered Communication Methods
 
-I prefer [async communication](https://handbook.gitlab.com/handbook/company/culture/all-remote/asynchronous/)
+I prefer [async communication](https://handbook.gitlab.com/handbook/company/culture/all-remote/asynchronous/).
 
 - Knowledge Share: Documentation (always respond with a link)
 - Project Related: Ticket/Work-Item Comment
