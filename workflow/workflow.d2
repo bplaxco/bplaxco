@@ -1,0 +1,55 @@
+vars: {
+  # Common steps for processing incomming messages/emails/tickets/etc
+  process_inbox: {
+    for: "For item in inbox:" {
+      is_important: "Is important?"
+      is_response: "Is response?"
+      is_task: "Is task?"
+      is_urgent: "Is urgent?"
+      create_task: "Create task"
+      do_task: "Do task"
+      track_task: "Track task"
+      archive: "Archive"
+      save: "Read and save"
+
+      is_important -> archive: "No"
+      is_important -> is_response: "Yes"
+
+      is_response -> do_task: "Yes"
+      is_response -> is_task: "No"
+
+      is_task -> is_urgent: "Yes"
+      is_task -> save: "No"
+
+      is_urgent -> do_task: "Yes"
+      is_urgent -> create_task: "No"
+
+      do_task -> track_task
+    }
+  }
+}
+
+start: "Start"
+break1: "Take a break"
+break2: "Take a break"
+process_chat: "Process chat" {
+  ...${process_inbox}
+}
+process_email: "Process email" {
+  ...${process_inbox}
+}
+process_tickets: "Process tickets" {
+  ...${process_inbox}
+}
+
+process_task: "Process task" {
+  do_task: "Do next queued task"
+  track_task: "Track task"
+  process_backlog: "Process backlog"
+
+  do_task -> track_task -> process_backlog
+}
+
+start -> process_chat -> process_email -> break1
+break1 -> process_tickets -> process_task -> break2
+break2 -> start
