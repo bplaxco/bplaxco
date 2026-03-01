@@ -22,4 +22,5 @@ every situation. Things change over time and from moment to moment.
 
 ## Building
 
-Run `make`. It requires `make` and `d2` to be installed.
+Run `make`. It requires `make` and `d2` to be installed. Optional:
+`inotifywait` for `make watch`.
