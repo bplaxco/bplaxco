@@ -1,55 +1,197 @@
+direction: right
 vars: {
-  # Common steps for processing incomming messages/emails/tickets/etc
-  process_inbox: {
-    for: "For item in inbox:" {
-      is_important: "Is important?"
-      is_response: "Is response?"
-      is_task: "Is task?"
-      is_urgent: "Is urgent?"
-      create_task: "Create task"
-      do_task: "Do task"
-      track_task: "Track task"
-      archive: "Archive"
-      save: "Read and save"
+  d2-config: {
+    layout-engine: elk
+  }
+}
 
-      is_important -> archive: "No"
-      is_important -> is_response: "Yes"
-
-      is_response -> do_task: "Yes"
-      is_response -> is_task: "No"
-
-      is_task -> is_urgent: "Yes"
-      is_task -> save: "No"
-
-      is_urgent -> do_task: "Yes"
-      is_urgent -> create_task: "No"
-
-      do_task -> track_task
+classes: {
+  decision: {
+    shape: diamond
+  }
+  terminal: {
+    shape: oval
+  }
+  storage: {
+    shape: cylinder
+    style: {
+      fill: "#bbdefb"
+      stroke: "#2196f3"
+    }
+  }
+  action: {
+    style: {
+      fill: "#4caf50"
+      font-color: white
+      border-radius: 5
+    }
+  }
+  critical: {
+    style: {
+      fill: "#f44336"
+      font-color: white
+      border-radius: 5
+    }
+  }
+  data_flow: {
+    style: {
+      stroke-dash: 5
+    }
+  }
+  zone: {
+    style: {
+      fill: transparent
+      stroke-width: 2
+      border-radius: 8
     }
   }
 }
 
-start: "Start"
-break1: "Take a break"
-break2: "Take a break"
-process_chat: "Process chat" {
-  ...${process_inbox}
+start: "Start" {
+  class: terminal
 }
-process_email: "Process email" {
-  ...${process_inbox}
-}
-process_tickets: "Process tickets" {
-  ...${process_inbox}
+end: "End" {
+  class: terminal
 }
 
-process_task: "Process task" {
-  do_task: "Do next queued task"
-  track_task: "Track task"
-  process_backlog: "Process backlog"
+triage: "Triage" {
+  class: zone
+  style.stroke: "#9e9e9e"
+  style.fill: "#fafafa"
 
-  do_task -> track_task -> process_backlog
+  priority_queue: "Priority Queue" {
+    class: storage
+  }
+
+  priority_note: "Priority: Chat > Email > Tickets" {
+    shape: document
+  }
+
+  priority_note -- priority_queue
+
+  start: "Start" {
+    class: terminal
+  }
+  fetch: "Fetch"
+  is_empty: "Queue empty?" {class: decision}
+  is_important: "Important?" {class: decision}
+  is_action: "Actionable?" {class: decision}
+  is_urgent: "Urgent?" {class: decision}
+  is_small: "Takes < 5 mins?" {class: decision}
+  can_transfer: "Can transfer?" {class: decision}
+
+  archive: "Archive"
+  execute: "Execute" {class: action}
+  transfer: "Transfer"
+  queue: "Queue task"
+  end: "End" {
+    class: terminal
+  }
+
+  start -> fetch
+  priority_queue -> fetch: {
+    class: data_flow
+  }
+  fetch -> is_empty
+  is_empty -> end: "Yes"
+  is_empty -> is_important: "No"
+
+  is_important -> archive: "No"
+  is_important -> is_action: "Yes"
+
+  is_action -> archive: "No"
+  is_action -> is_urgent: "Yes"
+
+  is_urgent -> execute: "Yes"
+  is_urgent -> is_small: "No"
+
+  is_small -> execute: "Yes"
+  is_small -> can_transfer: "No"
+
+  can_transfer -> transfer: "Yes"
+  can_transfer -> queue: "No"
+
+  # Loop back to fetch
+  archive -> fetch
+  execute -> fetch
+  transfer -> fetch
+  queue -> fetch
 }
 
-start -> process_chat -> process_email -> break1
-break1 -> process_tickets -> process_task -> break2
-break2 -> start
+task_execution: "Task Execution" {
+  class: zone
+  style.stroke: "#4caf50"
+  style.fill: "#f1f8e9"
+
+  tasks: "Tasks" {
+    class: storage
+  }
+
+  start: "Start" {
+    class: terminal
+  }
+  fetch: "Fetch"
+  is_empty: "Queue empty?" {class: decision}
+  execute: "Execute"
+  update: "Update"
+  end: "End" {
+    class: terminal
+  }
+
+  start -> fetch
+  tasks -> fetch: {
+    class: data_flow
+  }
+  fetch -> is_empty
+
+  is_empty -> end: "Yes"
+  is_empty -> execute: "No"
+
+  execute -> update
+  update -> fetch
+}
+
+start -> triage.start
+triage.end -> task_execution.start
+task_execution.end -> end
+
+# Storage Links
+triage.queue -> task_execution.tasks: {
+  class: data_flow
+}
+
+handle_interrupt: "Handle Interrupt\n(Always active)" {
+  class: zone
+  near: bottom-right
+  direction: right
+  style: {
+    stroke: "#ff9800"
+    stroke-dash: 5
+  }
+
+  interrupt: "Interrupt"
+  defer: "Defer"
+  resume: "Resume"
+
+  is_critical: "Critical?" {
+    class: decision
+  }
+
+  execute_ir: "Resolve immediately" {
+    class: critical
+  }
+
+  interrupt -> is_critical
+  is_critical -> execute_ir: "Yes"
+  is_critical -> defer: "No"
+  execute_ir -> resume
+  defer -> resume
+}
+
+# Interrupt Routing (Context Switching)
+task_execution -- handle_interrupt: "Context switch" {
+  style: {
+    stroke-dash: 5
+    stroke: "#ff9800"
+  }
+}
