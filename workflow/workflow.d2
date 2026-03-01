@@ -50,6 +50,7 @@ classes: {
 start: "Start" {
   class: terminal
 }
+
 end: "End" {
   class: terminal
 }
@@ -59,19 +60,10 @@ triage: "Triage" {
   style.stroke: "#9e9e9e"
   style.fill: "#fafafa"
 
-  priority_queue: "Priority Queue" {
-    class: storage
-  }
-
-  priority_note: "Priority: Chat > Email > Tickets" {
-    shape: document
-  }
-
+  priority_queue: "Priority Queue" {class: storage}
+  priority_note: "Priority: Chat > Email > Tickets" {shape: document}
   priority_note -- priority_queue
-
-  start: "Start" {
-    class: terminal
-  }
+  start: "Start" {class: terminal}
   fetch: "Fetch"
   is_empty: "Queue empty?" {class: decision}
   is_important: "Important?" {class: decision}
@@ -79,39 +71,27 @@ triage: "Triage" {
   is_urgent: "Urgent?" {class: decision}
   is_small: "Takes < 5 mins?" {class: decision}
   can_transfer: "Can transfer?" {class: decision}
-
   archive: "Archive"
   execute: "Execute" {class: action}
   transfer: "Transfer"
   queue: "Queue task"
-  end: "End" {
-    class: terminal
-  }
+  end: "End" {class: terminal}
 
   start -> fetch
-  priority_queue -> fetch: {
-    class: data_flow
-  }
+  priority_queue -> fetch: {class: data_flow}
   fetch -> is_empty
   is_empty -> end: "Yes"
   is_empty -> is_important: "No"
-
   is_important -> archive: "No"
   is_important -> is_action: "Yes"
-
   is_action -> archive: "No"
   is_action -> is_urgent: "Yes"
-
   is_urgent -> execute: "Yes"
   is_urgent -> is_small: "No"
-
   is_small -> execute: "Yes"
   is_small -> can_transfer: "No"
-
   can_transfer -> transfer: "Yes"
   can_transfer -> queue: "No"
-
-  # Loop back to fetch
   archive -> fetch
   execute -> fetch
   transfer -> fetch
@@ -123,42 +103,33 @@ task_execution: "Task Execution" {
   style.stroke: "#4caf50"
   style.fill: "#f1f8e9"
 
-  tasks: "Tasks" {
-    class: storage
-  }
-
-  start: "Start" {
-    class: terminal
-  }
-  fetch: "Fetch"
+  tasks: "Tasks" {class: storage}
+  start: "Start" {class: terminal}
+  fetch: "Fetch first actionable task"
   is_empty: "Queue empty?" {class: decision}
-  execute: "Execute"
-  update: "Update"
-  end: "End" {
-    class: terminal
-  }
+  execute: "Execute" {class: action}
+  update: "Update Status"
+  is_blocked: "Is blocked?" {class: decision}
+  insert: "Insert at top of tasks"
+  end: "End" {class: terminal}
 
   start -> fetch
-  tasks -> fetch: {
-    class: data_flow
-  }
+  tasks -> fetch: {class: data_flow}
+  insert -> tasks: {class: data_flow}
   fetch -> is_empty
-
   is_empty -> end: "Yes"
   is_empty -> execute: "No"
-
   execute -> update
-  update -> fetch
+  update -> is_blocked
+  is_blocked -> fetch: "No"
+  is_blocked -> insert: "Yes"
+  insert -> fetch
 }
 
 start -> triage.start
 triage.end -> task_execution.start
 task_execution.end -> end
-
-# Storage Links
-triage.queue -> task_execution.tasks: {
-  class: data_flow
-}
+triage.queue -> task_execution.tasks: {class: data_flow}
 
 handle_interrupt: "Handle Interrupt\n(Always active)" {
   class: zone
@@ -171,14 +142,8 @@ handle_interrupt: "Handle Interrupt\n(Always active)" {
   interrupt: "Interrupt"
   defer: "Defer"
   resume: "Resume"
-
-  is_critical: "Critical?" {
-    class: decision
-  }
-
-  execute_ir: "Resolve immediately" {
-    class: critical
-  }
+  is_critical: "Critical?" {class: decision}
+  execute_ir: "Resolve immediately" {class: critical}
 
   interrupt -> is_critical
   is_critical -> execute_ir: "Yes"
