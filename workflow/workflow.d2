@@ -51,11 +51,12 @@ start: "Start" {
   class: terminal
 }
 
-end: "End" {
-  class: terminal
+day_type: "Triage Day or\nTask Day?" {
+  class: decision
 }
 
-triage: "Triage" {
+# TRIAGE DAY
+triage_day: "Triage Day" {
   class: zone
   style.stroke: "#9e9e9e"
   style.fill: "#fafafa"
@@ -98,7 +99,7 @@ triage: "Triage" {
   queue -> fetch
 }
 
-task_execution: "Task Execution" {
+task_day: "Task Day" {
   class: zone
   style.stroke: "#4caf50"
   style.fill: "#f1f8e9"
@@ -126,10 +127,16 @@ task_execution: "Task Execution" {
   insert -> fetch
 }
 
-start -> triage.start
-triage.end -> task_execution.start
-task_execution.end -> end
-triage.queue -> task_execution.tasks: {class: data_flow}
+end: "End" {
+  class: terminal
+}
+
+start -> day_type
+day_type -> triage_day.start: "Triage Day"
+day_type -> task_day.start: "Task Day"
+triage_day.end -> end
+task_day.end -> end
+triage_day.queue -> task_day.tasks: {class: data_flow}
 
 handle_interrupt: "Handle Interrupt\n(Always active)" {
   class: zone
@@ -153,7 +160,7 @@ handle_interrupt: "Handle Interrupt\n(Always active)" {
 }
 
 # Interrupt Routing (Context Switching)
-task_execution -- handle_interrupt: "Context switch" {
+task_day -- handle_interrupt: "Context switch" {
   style: {
     stroke-dash: 5
     stroke: "#ff9800"
