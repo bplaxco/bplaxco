@@ -76,12 +76,14 @@ triage_day: "Triage Day" {
   execute: "Execute" {class: action}
   transfer: "Transfer"
   queue: "Queue task"
+  has_planning: "Planning tasks?" {class: decision}
+  planning: "Do planning" {class: action}
   end: "End" {class: terminal}
 
   start -> fetch
   priority_queue -> fetch: {class: data_flow}
   fetch -> is_empty
-  is_empty -> end: "Yes"
+  is_empty -> has_planning: "Yes"
   is_empty -> is_important: "No"
   is_important -> archive: "No"
   is_important -> is_action: "Yes"
@@ -97,6 +99,9 @@ triage_day: "Triage Day" {
   execute -> fetch
   transfer -> fetch
   queue -> fetch
+  has_planning -> planning: "Yes"
+  has_planning -> end: "No"
+  planning -> fetch
 }
 
 task_day: "Task Day" {
