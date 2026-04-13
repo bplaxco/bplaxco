@@ -136,7 +136,17 @@ end: "End" {
   class: terminal
 }
 
-start -> day_type
+update: "Update systems"
+
+plan: "Plan day" {
+	check_pings: "Check notifications"
+	create_tasks: "Create tasks"
+	select_goals: "Select goals"
+	
+	check_pings -> create_tasks -> select_goals
+}
+
+start -> update -> plan -> day_type
 day_type -> triage_day.start: "Triage Day"
 day_type -> task_day.start: "Task Day"
 triage_day.end -> end
